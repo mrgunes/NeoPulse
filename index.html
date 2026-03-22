@@ -1322,7 +1322,7 @@ updateTopClock();
 setInterval(updateTopClock, 1000);
 
 // Pomodoro
-const POM_DURATION = 45 * 60;
+const POM_DURATION = 25 * 60;
 let pomLeft = POM_DURATION;
 let pomInterval = null;
 let pomRunning = false;
@@ -1364,7 +1364,7 @@ pomDisplay();
 
 <div class="pomodoro">
   <div class="pomodoro-label">Pomodoro</div>
-  <div class="pomodoro-time" id="pomTime">25:00</div>
+  <div class="pomodoro-time" id="pomTime">45:00</div>
   <div class="pomodoro-btns">
     <button class="pom-btn start" onclick="pomStart()">Start</button>
     <button class="pom-btn stop"  onclick="pomStop()">Stop</button>
