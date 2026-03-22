@@ -96,6 +96,79 @@
 
     .spacer { flex: 1; }
 
+    .clock {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 8px var(--accent-dim);
+    }
+
+    .pomodoro {
+      position: fixed;
+      bottom: 16px;
+      right: 20px;
+      z-index: 100;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 10px 16px 10px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .pomodoro-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .pomodoro-time {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 12px var(--accent-dim);
+      line-height: 1;
+    }
+
+    .pomodoro-time.running { color: var(--green); text-shadow: 0 0 12px rgba(34,212,122,0.4); }
+    .pomodoro-time.done    { color: var(--red);   text-shadow: 0 0 12px rgba(241,68,68,0.4); animation: flash 0.6s ease infinite alternate; }
+
+    @keyframes flash { from { opacity: 1; } to { opacity: 0.3; } }
+
+    .pomodoro-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .pom-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+
+    .pom-btn:hover { background: var(--surface3); border-color: var(--accent-dim); color: var(--accent); }
+    .pom-btn.start { border-color: rgba(34,212,122,0.5); color: var(--green); }
+    .pom-btn.start:hover { background: rgba(34,212,122,0.08); border-color: var(--green); }
+    .pom-btn.stop  { border-color: rgba(241,68,68,0.5); color: var(--red); }
+    .pom-btn.stop:hover  { background: rgba(241,68,68,0.08); border-color: var(--red); }
+
     .btn-upload {
       display: flex;
       align-items: center;
@@ -711,6 +784,8 @@
   <div class="sep"></div>
   <div class="topbar-label">Progress Display</div>
   <div class="spacer"></div>
+  <div class="clock" id="topClock"></div>
+  <div class="sep"></div>
   <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1234,6 +1309,67 @@ renderStages();
 renderMotiv();
 renderHistory();
 if (logs.length) openLog(0);
+
+function updateTopClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  const el = document.getElementById('topClock');
+  if (el) el.textContent = `${h}:${m}:${s}`;
+}
+updateTopClock();
+setInterval(updateTopClock, 1000);
+
+// Pomodoro
+const POM_DURATION = 45 * 60;
+let pomLeft = POM_DURATION;
+let pomInterval = null;
+let pomRunning = false;
+
+function pomDisplay() {
+  const m = String(Math.floor(pomLeft / 60)).padStart(2, '0');
+  const s = String(pomLeft % 60).padStart(2, '0');
+  const el = document.getElementById('pomTime');
+  if (!el) return;
+  el.textContent = `${m}:${s}`;
+  el.className = 'pomodoro-time' + (pomRunning ? ' running' : pomLeft === 0 ? ' done' : '');
+}
+
+function pomStart() {
+  if (pomRunning || pomLeft === 0) return;
+  pomRunning = true;
+  pomInterval = setInterval(() => {
+    pomLeft--;
+    if (pomLeft <= 0) { pomLeft = 0; pomStop(); }
+    pomDisplay();
+  }, 1000);
+  pomDisplay();
+}
+
+function pomStop() {
+  pomRunning = false;
+  clearInterval(pomInterval);
+  pomDisplay();
+}
+
+function pomReset() {
+  pomStop();
+  pomLeft = POM_DURATION;
+  pomDisplay();
+}
+
+pomDisplay();
 </script>
+
+<div class="pomodoro">
+  <div class="pomodoro-label">Pomodoro</div>
+  <div class="pomodoro-time" id="pomTime">25:00</div>
+  <div class="pomodoro-btns">
+    <button class="pom-btn start" onclick="pomStart()">Start</button>
+    <button class="pom-btn stop"  onclick="pomStop()">Stop</button>
+    <button class="pom-btn"       onclick="pomReset()">Reset</button>
+  </div>
+</div>
 </body>
 </html>
